@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  A_ID                                             String        @id @db.VarChar(10)
+  UserName                                         String        @unique(map: "UserName") @db.VarChar(80)
+  PassWord                                         String        @db.VarChar(255)
+  Email                                            String        @unique(map: "Email") @db.VarChar(150)
+  R_ID                                             String        @db.VarChar(10)
+  M_ID                                             String?       @db.VarChar(10)
+  Status                                           String?       @db.VarChar(30)
+  Deleted_At                                       DateTime?     @db.DateTime(0)
+  Deleted_By                                       String?       @db.VarChar(10)
+  IsDeleted                                        Boolean       @default(false)
+  Member                                           Member?       @relation(fields: [M_ID], references: [M_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_Account_Member")
+  Role                                             Role          @relation(fields: [R_ID], references: [R_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_Account_Role")
+  Project                                          Project[]
+  Task                                             Task[]
+  Task_Report_Task_Report_Created_By_A_IDToAccount Task_Report[] @relation("Task_Report_Created_By_A_IDToAccount")
+  Task_Report_Task_Report_Reporter_A_IDToAccount   Task_Report[] @relation("Task_Report_Reporter_A_IDToAccount")
+
+  @@index([M_ID], map: "FK_Account_Member")
+  @@index([R_ID], map: "FK_Account_Role")
+}
+
+model Department {
+  D_ID             String       @id @db.VarChar(10)
+  D_Name           String       @db.VarChar(200)
+  Parent_D_ID      String?      @db.VarChar(10)
+  Status           String?      @db.VarChar(30)
+  Deleted_At       DateTime?    @db.DateTime(0)
+  Deleted_By       String?      @db.VarChar(10)
+  IsDeleted        Boolean      @default(false)
+  Department       Department?  @relation("DepartmentToDepartment", fields: [Parent_D_ID], references: [D_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_Department_Parent")
+  other_Department Department[] @relation("DepartmentToDepartment")
+  Member           Member[]
+  Project          Project[]
+
+  @@index([Parent_D_ID], map: "FK_Department_Parent")
+}
+
+model Member {
+  M_ID        String     @id @db.VarChar(10)
+  FullName    String     @db.VarChar(200)
+  PhoneNumber String?    @db.VarChar(30)
+  BirthDate   DateTime?  @db.Date
+  JoinDate    DateTime?  @db.Date
+  D_ID        String     @db.VarChar(10)
+  Status      String?    @db.VarChar(30)
+  Deleted_At  DateTime?  @db.DateTime(0)
+  Deleted_By  String?    @db.VarChar(10)
+  IsDeleted   Boolean    @default(false)
+  Account     Account[]
+  Department  Department @relation(fields: [D_ID], references: [D_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_Member_Department")
+  Task        Task[]
+
+  @@index([D_ID], map: "FK_Member_Department")
+}
+
+model Permission {
+  P_ID            String            @id @db.VarChar(10)
+  P_Name          String            @unique(map: "P_Name") @db.VarChar(150)
+  Description     String?           @db.VarChar(400)
+  Role_Permission Role_Permission[]
+}
+
+model Project {
+  P_ID            String     @id @db.VarChar(10)
+  D_ID            String     @db.VarChar(10)
+  P_Name          String     @db.VarChar(200)
+  Begin_Date      DateTime?  @db.Date
+  End_Date        DateTime?  @db.Date
+  Created_By_A_ID String?    @db.VarChar(10)
+  Status          String?    @db.VarChar(30)
+  Deleted_At      DateTime?  @db.DateTime(0)
+  Deleted_By      String?    @db.VarChar(10)
+  IsDeleted       Boolean    @default(false)
+  Account         Account?   @relation(fields: [Created_By_A_ID], references: [A_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_Project_CreatedBy")
+  Department      Department @relation(fields: [D_ID], references: [D_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_Project_Department")
+  Task            Task[]
+
+  @@index([Created_By_A_ID], map: "FK_Project_CreatedBy")
+  @@index([D_ID], map: "FK_Project_Department")
+}
+
+model Role {
+  R_ID            String            @id @db.VarChar(10)
+  R_Name          String            @unique(map: "R_Name") @db.VarChar(100)
+  Description     String?           @db.VarChar(400)
+  Account         Account[]
+  Role_Permission Role_Permission[]
+}
+
+model Role_Permission {
+  R_ID       String     @db.VarChar(10)
+  P_ID       String     @db.VarChar(10)
+  Permission Permission @relation(fields: [P_ID], references: [P_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_RP_Permission")
+  Role       Role       @relation(fields: [R_ID], references: [R_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_RP_Role")
+
+  @@id([R_ID, P_ID])
+  @@index([P_ID], map: "FK_RP_Permission")
+}
+
+model Task {
+  T_ID             String        @id @db.VarChar(10)
+  Title            String        @db.VarChar(200)
+  Description      String?       @db.Text
+  Begin_Date       DateTime?     @db.Date
+  Due_Date         DateTime?     @db.Date
+  Priority         String?       @db.VarChar(30)
+  Complete_At      DateTime?     @db.DateTime(0)
+  P_ID             String        @db.VarChar(10)
+  Assigned_ID_M_ID String?       @db.VarChar(10)
+  Created_By_A_ID  String?       @db.VarChar(10)
+  Status           String?       @db.VarChar(30)
+  Deleted_At       DateTime?     @db.DateTime(0)
+  Deleted_By       String?       @db.VarChar(10)
+  IsDeleted        Boolean       @default(false)
+  Member           Member?       @relation(fields: [Assigned_ID_M_ID], references: [M_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_Task_AssignedMember")
+  Account          Account?      @relation(fields: [Created_By_A_ID], references: [A_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_Task_CreatedBy")
+  Project          Project       @relation(fields: [P_ID], references: [P_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_Task_Project")
+  Task_Report      Task_Report[]
+
+  @@index([Assigned_ID_M_ID], map: "FK_Task_AssignedMember")
+  @@index([Created_By_A_ID], map: "FK_Task_CreatedBy")
+  @@index([P_ID], map: "FK_Task_Project")
+}
+
+model Task_Report {
+  TR_ID                                        String    @id @db.VarChar(10)
+  Progress                                     String?   @db.VarChar(50)
+  Period_Type                                  String?   @db.VarChar(30)
+  Period_Start                                 DateTime? @db.Date
+  Period_End                                   DateTime? @db.Date
+  Content                                      String?   @db.Text
+  Complete_At                                  DateTime? @db.DateTime(0)
+  T_ID                                         String    @db.VarChar(10)
+  Reporter_A_ID                                String?   @db.VarChar(10)
+  Created_By_A_ID                              String?   @db.VarChar(10)
+  Status                                       String?   @db.VarChar(30)
+  Deleted_At                                   DateTime? @db.DateTime(0)
+  Deleted_By                                   String?   @db.VarChar(10)
+  IsDeleted                                    Boolean   @default(false)
+  Account_Task_Report_Created_By_A_IDToAccount Account?  @relation("Task_Report_Created_By_A_IDToAccount", fields: [Created_By_A_ID], references: [A_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_TR_CreatedBy")
+  Account_Task_Report_Reporter_A_IDToAccount   Account?  @relation("Task_Report_Reporter_A_IDToAccount", fields: [Reporter_A_ID], references: [A_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_TR_Reporter")
+  Task                                         Task      @relation(fields: [T_ID], references: [T_ID], onDelete: NoAction, onUpdate: NoAction, map: "FK_TR_Task")
+
+  @@index([Created_By_A_ID], map: "FK_TR_CreatedBy")
+  @@index([Reporter_A_ID], map: "FK_TR_Reporter")
+  @@index([T_ID], map: "FK_TR_Task")
+}
