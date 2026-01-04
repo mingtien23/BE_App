@@ -20,3 +20,4 @@ const authController = {
 };
 
 export default authController;
+// ma trận phân quyền

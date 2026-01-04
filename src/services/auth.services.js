@@ -1,6 +1,7 @@
 // src/services/auth.services.js
 import prisma from "../common/prisma/init.prisma.js";
 import { tokenService } from "./token.services.js";
+import dashboardService from "./dashboard.services.js";
 import bcrypt from "bcryptjs";
 
 const authServices = {
@@ -51,13 +52,24 @@ const authServices = {
     }
 
     const tokens = tokenService.createTokens(acc);
-    const { PassWord, ...safeAcc } = acc;
+    // const { PassWord, ...safeAcc } = acc; // Original safeAcc not strictly needed if we follow user format, but keeping valid user info is good.
+    // However, user specifically asked for Dashboard Summary structure.
+    
+    // Build Dashboard Summary
+    const userContext = {
+      A_ID: acc.A_ID,
+      R_Name: acc.Role?.R_Name,
+      M_ID: acc.M_ID,
+      D_ID: acc.Member?.D_ID,
+    };
+    
+    const dashboardSummary = await dashboardService.buildDashboardSummary(userContext);
 
     return {
       status: 200,
       data: {
-        user: safeAcc,
         tokens,
+        ...dashboardSummary, 
       },
     };
   },

@@ -9,10 +9,10 @@ import {
 export const tokenService = {
   createTokens: (acc) => {
     const payload = {
-      aid: acc.A_ID,
-      roleId: acc.R_ID,
-      roleName: acc.Role?.R_Name,
-      departmentId: acc.Member?.D_ID || null,
+      A_ID: acc.A_ID,
+      R_Name: acc.Role?.R_Name,
+      M_ID: acc.M_ID,
+      D_ID: acc.Member?.D_ID || null,
     };
 
     const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, {

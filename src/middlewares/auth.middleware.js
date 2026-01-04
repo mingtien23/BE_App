@@ -24,10 +24,10 @@ export const authMiddleware = {
       const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
       console.log("DECODED JWT:", decoded);
 
-      const { aid } = decoded;
+      const { A_ID } = decoded;
 
       const acc = await prisma.account.findUnique({
-        where: { A_ID: aid },
+        where: { A_ID: A_ID },
         include: {
           Role: true,
           Member: true,
@@ -39,10 +39,11 @@ export const authMiddleware = {
       }
 
       req.user = {
-        aid: acc.A_ID,
-        roleId: acc.R_ID,
-        roleName: acc.Role?.R_Name,
-        departmentId: acc.Member?.D_ID || null,
+        A_ID: acc.A_ID,
+        R_ID: acc.R_ID,
+        R_Name: acc.Role?.R_Name,
+        M_ID: acc.M_ID,
+        D_ID: acc.Member?.D_ID || null,
       };
 
       return next();
@@ -57,7 +58,7 @@ export const authMiddleware = {
 
   // cho tiện, vẫn giữ isAdmin
   isAdmin: (req, res, next) => {
-    if (req.user?.roleName?.toLowerCase() === "admin" || req.user?.roleId === "R_001") {
+    if (req.user?.R_Name?.toLowerCase() === "admin" || req.user?.R_ID === "R_001") {
       return next();
     }
     return res.status(403).json({ message: "Không có quyền" });
@@ -67,8 +68,8 @@ export const authMiddleware = {
   authorize:
     (required) =>
     (req, res, next) => {
-      const roleName = (req.user?.roleName || "").toLowerCase();
-      const roleId = req.user?.roleId;
+      const roleName = (req.user?.R_Name || "").toLowerCase();
+      const roleId = req.user?.R_ID;
 
       if (!roleId) {
         return res.status(403).json({ message: "Không có quyền" });
@@ -86,6 +87,10 @@ export const authMiddleware = {
     "DEPARTMENT_CREATE",
     "DEPARTMENT_UPDATE",
     "DEPARTMENT_DELETE",
+    "ACCOUNT_CREATE",
+    "ACCOUNT_LIST",
+    "ACCOUNT_STATUS",
+    "ACCOUNT_DELETE",
   ],
         // system: kỹ thuật
         system: [
@@ -93,6 +98,10 @@ export const authMiddleware = {
           "DEPARTMENT_CREATE",
           "DEPARTMENT_UPDATE",
           "DEPARTMENT_DELETE",
+          "ACCOUNT_CREATE",
+          "ACCOUNT_LIST",
+          "ACCOUNT_STATUS",
+          "ACCOUNT_DELETE",
         ],
         // PMO
         pmo: ["DEPARTMENT_LIST"],

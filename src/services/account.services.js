@@ -79,10 +79,11 @@ const accountServices = {
 
       return {
         status: 201,
-        data: {
-          account: safeAcc,
-          createdBy: actor?.aid || null,
-        },
+        message: "Account created successfully",
+        // Keeping data for debugging/info if user wants, but user asked for message.
+        // To be strict with user request:
+        // data: { ... } removed or minimal?
+        // User asked: "Success: { status: 201, message: 'Account created successfully' }"
       };
     } catch (err) {
       console.error("CREATE ACCOUNT ERROR:", err);
@@ -103,7 +104,7 @@ const accountServices = {
   // ---------- F05: Khoá / Mở khoá ----------
   changeStatus: async (req) => {
     try {
-      const { aid: actorAid } = req.user;
+      const { A_ID: actorAid } = req.user;
       const { A_ID } = req.params;
       const { status, reason } = req.body; // status: 'locked' | 'active'
 
@@ -147,7 +148,7 @@ const accountServices = {
   // ---------- F06: Xoá tài khoản (soft delete) ----------
   softDelete: async (req) => {
     try {
-      const { aid: actorAid } = req.user;
+      const { A_ID: actorAid } = req.user;
       const { A_ID } = req.params;
 
       if (!A_ID) {
